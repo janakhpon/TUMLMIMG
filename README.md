@@ -1,2 +1,2 @@
 # TUMLMIMG
-Avatar or Sign in Scanned Data Sharing App
+Privacy based Sharing app for scanned Avatar and Signature
