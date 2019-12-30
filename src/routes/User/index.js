@@ -1,12 +1,35 @@
-import mongoose from 'mongoose'
 import express from 'express'
-import path from 'path'
-import multer from 'multer'
-import fs from 'fs'
+import bcrypt from 'bcryptjs'
+import passport from 'passport'
+require('../../auth')(passport)
 const router = express.Router()
 import User from '../../models/User'
+import Storage from '../../models/Storage'
 import hashPassword from '../../utils'
+import generateToken from '../../utils'
 
+router.post('/reset', async (req, res) => {
+
+
+    try {
+        let user = await User.deleteMany({})
+        let storage = await Storage.deleteMany({})
+        res.json({
+            data: { user, storage },
+            msg: "resetted successfully",
+            err: "",
+            status: 200
+        })
+    } catch (err) {
+        let user = {}
+        res.json({
+            data: user,
+            msg: "",
+            err: err,
+            status: 500
+        })
+    }
+})
 
 router.get('/users', async (req, res) => {
     let users = await User.find()
@@ -51,7 +74,7 @@ router.get('/user/:_id', async (req, res) => {
 })
 
 
-router.post('/user', async (req, res) => {
+router.post('/usersignup', async (req, res) => {
 
     let password = await hashPassword(req.body.password)
 
@@ -77,6 +100,52 @@ router.post('/user', async (req, res) => {
             status: 500
         })
     }
+
+})
+
+
+router.post('/usersignin', async (req, res) => {
+
+    let email = req.body.email;
+    let password = req.body.password;
+
+    let user = await User.findOne({ email })
+    if (!user) {
+        let user = {}
+        return res.json({
+            data: user,
+            msg: "",
+            err: err,
+            status: 500
+        })
+    } else {
+        const isMatch = await bcrypt.compare(password, user.password)
+
+        if (isMatch) {
+            const token = generateToken(user)
+
+            res.json({
+                sucess: true,
+                msg: 'authorized from now on',
+                err: '',
+                status: 200,
+                token: token
+            })
+
+
+        } else {
+            let user = {}
+            return res.json({
+                data: user,
+                msg: "",
+                err: err,
+                status: 500
+            })
+        }
+    }
+
+
+
 
 })
 
