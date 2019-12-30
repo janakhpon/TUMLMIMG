@@ -118,7 +118,7 @@ router.post('/user/:_id', async (req, res) => {
 })
 
 
-router.delete('/del/:_id', (req, res) => {
+router.delete('/del/:_id', async (req, res) => {
     try {
         let user = await User.deleteOne({ _id: req.params._id })
         res.json({

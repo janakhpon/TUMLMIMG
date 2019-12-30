@@ -126,7 +126,7 @@ router.post('/list/:_id', async (req, res) => {
 })
 
 
-router.delete('/del/:_id', (req, res) => {
+router.delete('/del/:_id', async (req, res) => {
     try {
         let list = await Storage.deleteOne({ _id: req.params._id })
         res.json({
