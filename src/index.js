@@ -7,7 +7,7 @@ import multer from 'multer'
 import uuid from 'uuid/v4'
 import cors from 'cors'
 import methodOverride from 'method-override'
-
+import ssr from './routes/SSR'
 import User from './routes/User'
 import Storage from './routes/Storage'
 const db = require('./config')
@@ -41,11 +41,12 @@ app.use(function (req, res, next) {
 
 })
 
+app.use("/", ssr)
 app.use('/userapi/', User)
 app.use('/storageapi', Storage)
 
 const port = process.env.PORT || 5000
 
 app.listen(port, () => {
-  console.log(`🚀 ==> Server running on port http://localhost:${port}`)
+    console.log(`🚀 ==> Server running on port http://localhost:${port}`)
 })
