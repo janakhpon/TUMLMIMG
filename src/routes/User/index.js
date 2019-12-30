@@ -1,16 +1,15 @@
 import express from 'express'
 import bcrypt from 'bcryptjs'
-import passport from 'passport'
+import jwt from 'jsonwebtoken'
+var passport = require('passport')
 require('../../auth')(passport)
 const router = express.Router()
 import User from '../../models/User'
 import Storage from '../../models/Storage'
 import hashPassword from '../../utils'
-import generateToken from '../../utils'
+const db = require('../../config')
 
 router.post('/reset', async (req, res) => {
-
-
     try {
         let user = await User.deleteMany({})
         let storage = await Storage.deleteMany({})
@@ -31,9 +30,8 @@ router.post('/reset', async (req, res) => {
     }
 })
 
-router.get('/users', async (req, res) => {
+router.get('/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
     let users = await User.find()
-
     if (users) {
         res.json({
             data: users,
@@ -49,13 +47,11 @@ router.get('/users', async (req, res) => {
             status: 204
         })
     }
-
 })
 
 
 router.get('/user/:_id', async (req, res) => {
     let user = await User.find({ _id: req.params._id })
-
     if (user) {
         res.json({
             data: user,
@@ -75,14 +71,11 @@ router.get('/user/:_id', async (req, res) => {
 
 
 router.post('/usersignup', async (req, res) => {
-
     let password = await hashPassword(req.body.password)
-
     const dbuser = new User({
         ...req.body,
         password
     })
-
     try {
         let user = await dbuser.save()
         res.json({
@@ -105,10 +98,8 @@ router.post('/usersignup', async (req, res) => {
 
 
 router.post('/usersignin', async (req, res) => {
-
     let email = req.body.email;
     let password = req.body.password;
-
     let user = await User.findOne({ email })
     if (!user) {
         let user = {}
@@ -120,18 +111,22 @@ router.post('/usersignin', async (req, res) => {
         })
     } else {
         const isMatch = await bcrypt.compare(password, user.password)
-
         if (isMatch) {
-            const token = generateToken(user)
-
-            res.json({
-                sucess: true,
-                msg: 'authorized from now on',
-                err: '',
-                status: 200,
-                token: token
-            })
-
+            const payload = { id: user._id, username: user.username, email: user.email, phone: user.phone, position: user.position }
+            jwt.sign(
+                payload,
+                db.SECRET_KEY,
+                { expiresIn: 3600 },
+                (err, token) => {
+                    res.json({
+                        sucess: true,
+                        msg: 'authorized from now on',
+                        err: '',
+                        status: 200,
+                        token: 'Bearer ' + token
+                    })
+                }
+            )
 
         } else {
             let user = {}
@@ -143,10 +138,6 @@ router.post('/usersignin', async (req, res) => {
             })
         }
     }
-
-
-
-
 })
 
 
