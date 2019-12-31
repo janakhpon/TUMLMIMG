@@ -1,4 +1,6 @@
-import mongoose from 'mongoose'
+import fs from 'fs-extra'
+import rimraf from 'rimraf'
+import path from 'path'
 import express from 'express'
 import jwt from 'jsonwebtoken'
 var passport = require('passport')
@@ -6,6 +8,28 @@ require('../../auth')(passport)
 const router = express.Router()
 import Storage from '../../models/Storage'
 
+router.post('/reset', async (req, res) => {
+    try {
+        let storage = await Storage.deleteMany({})
+        rimraf('./src/public/img/*', () => {
+            res.json({
+                data: storage,
+                msg: "resetted successfully",
+                err: "",
+                status: 200
+            })
+        })
+
+    } catch (err) {
+        let user = {}
+        res.json({
+            data: user,
+            msg: "",
+            err: err,
+            status: 500
+        })
+    }
+})
 
 router.get('/lists', passport.authenticate('jwt', { session: false }), async (req, res) => {
     let lists = await Storage.find()
@@ -139,13 +163,43 @@ router.post('/list/:_id', passport.authenticate("jwt", { session: false }), asyn
 
 router.delete('/remove/:_id', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
-        let list = await Storage.deleteOne({ _id: req.params._id })
-        res.json({
-            data: list,
-            msg: "removed list successfully",
-            err: "",
-            status: 200
-        })
+        let listdata = await Storage.findOne({ _id: req.params._id })
+        if (listdata) {
+            if (`${listdata.user}` === `${req.user.id}`) {
+                let dir = `./src/public${listdata.image}`
+                try {
+                    fs.unlinkSync(dir);
+                } catch (err) {
+
+                }
+                let list = await Storage.deleteOne({ _id: req.params._id })
+                res.json({
+                    data: list,
+                    msg: "removed list successfully",
+                    err: "",
+                    status: 200
+                })
+            } else {
+                let list = {}
+                res.json({
+                    data: list,
+                    msg: "",
+                    err: "Unauthroized!",
+                    status: 500
+                })
+            }
+
+
+        } else {
+            let list = {}
+            res.json({
+                data: list,
+                msg: "",
+                err: "No Image Found!",
+                status: 500
+            })
+        }
+
     } catch (err) {
         let list = {}
         res.json({
