@@ -1,8 +1,6 @@
-import fs from 'fs-extra'
+import fs from 'fs'
 import rimraf from 'rimraf'
-import path from 'path'
 import express from 'express'
-import jwt from 'jsonwebtoken'
 var passport = require('passport')
 require('../../auth')(passport)
 const router = express.Router()
@@ -19,7 +17,6 @@ router.post('/reset', async (req, res) => {
                 status: 200
             })
         })
-
     } catch (err) {
         let user = {}
         res.json({
@@ -51,7 +48,6 @@ router.get('/lists', passport.authenticate('jwt', { session: false }), async (re
     }
 })
 
-
 router.get('/list/:_id', async (req, res) => {
     let list = await Storage.find({ _id: req.params._id })
     if (list) {
@@ -70,7 +66,6 @@ router.get('/list/:_id', async (req, res) => {
         })
     }
 })
-
 
 router.post('/list', passport.authenticate("jwt", { session: false }), async (req, res) => {
     let d = new Date()
@@ -102,9 +97,7 @@ router.post('/list', passport.authenticate("jwt", { session: false }), async (re
             status: 500
         })
     }
-
 })
-
 
 router.post('/list/:_id', passport.authenticate("jwt", { session: false }), async (req, res) => {
     let listExist = await Storage.findOne({ _id: req.params._id })
@@ -159,7 +152,6 @@ router.post('/list/:_id', passport.authenticate("jwt", { session: false }), asyn
         }
     }
 })
-
 
 router.delete('/remove/:_id', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
