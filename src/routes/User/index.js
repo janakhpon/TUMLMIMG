@@ -50,8 +50,8 @@ router.get('/users', passport.authenticate('jwt', { session: false }), async (re
 })
 
 
-router.get('/user/:_id', async (req, res) => {
-    let user = await User.find({ _id: req.params._id })
+router.get('/user', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    let user = await User.find({ _id: req.user.id })
     if (user) {
         res.json({
             data: user,
@@ -71,29 +71,40 @@ router.get('/user/:_id', async (req, res) => {
 
 
 router.post('/usersignup', async (req, res) => {
-    let password = await hashPassword(req.body.password)
-    const dbuser = new User({
-        ...req.body,
-        password
-    })
-    try {
-        let user = await dbuser.save()
-        res.json({
-            data: user,
-            msg: "added user successfully",
-            err: "",
-            status: 200
-        })
-    } catch (err) {
+    let emailExist = await User.findOne({ email: req.body.email })
+    if (emailExist) {
         let user = {}
-        res.json({
+        return res.json({
             data: user,
             msg: "",
-            err: err,
-            status: 500
+            err: "email already exist!",
+            status: 409
         })
-    }
+    } else {
+        let password = await hashPassword(req.body.password)
+        const dbuser = new User({
+            ...req.body,
+            password
+        })
+        try {
+            let user = await dbuser.save()
+            res.json({
+                data: user,
+                msg: "added user successfully",
+                err: "",
+                status: 200
+            })
+        } catch (err) {
+            let user = {}
+            res.json({
+                data: user,
+                msg: "",
+                err: err,
+                status: 500
+            })
+        }
 
+    }
 })
 
 
@@ -116,7 +127,7 @@ router.post('/usersignin', async (req, res) => {
             jwt.sign(
                 payload,
                 db.SECRET_KEY,
-                { expiresIn: 3600 },
+                { expiresIn: '7 days' },
                 (err, token) => {
                     res.json({
                         sucess: true,
@@ -141,8 +152,8 @@ router.post('/usersignin', async (req, res) => {
 })
 
 
-router.post('/user/:_id', async (req, res) => {
-    let userExist = await User.findOne({ _id: req.params._id })
+router.post('/updateuser', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    let userExist = await User.findOne({ _id: req.user.id })
 
     if (!userExist) {
         throw new Error("User not found")
@@ -156,7 +167,7 @@ router.post('/user/:_id', async (req, res) => {
     }
 
     try {
-        let user = await User.findOneAndUpdate({ _id: req.params._id }, dbuser, {
+        let user = await User.findOneAndUpdate({ _id: req.user.id }, dbuser, {
             upsert: true,
             new: true
         })
@@ -178,9 +189,9 @@ router.post('/user/:_id', async (req, res) => {
 })
 
 
-router.delete('/del/:_id', async (req, res) => {
+router.delete('/remove', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
-        let user = await User.deleteOne({ _id: req.params._id })
+        let user = await User.deleteOne({ _id: req.user.id })
         res.json({
             data: user,
             msg: "removed user successfully",
