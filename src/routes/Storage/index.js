@@ -1,15 +1,14 @@
 import mongoose from 'mongoose'
 import express from 'express'
-import path from 'path'
-import multer from 'multer'
-import fs from 'fs'
+import jwt from 'jsonwebtoken'
+var passport = require('passport')
+require('../../auth')(passport)
 const router = express.Router()
 import Storage from '../../models/Storage'
 
 
-router.get('/lists', async (req, res) => {
+router.get('/lists', passport.authenticate('jwt', { session: false }), async (req, res) => {
     let lists = await Storage.find()
-
     if (lists) {
         res.json({
             data: lists,
@@ -26,13 +25,11 @@ router.get('/lists', async (req, res) => {
             status: 204
         })
     }
-
 })
 
 
 router.get('/list/:_id', async (req, res) => {
     let list = await Storage.find({ _id: req.params._id })
-
     if (list) {
         res.json({
             data: list,
@@ -51,19 +48,19 @@ router.get('/list/:_id', async (req, res) => {
 })
 
 
-router.post('/list', async (req, res) => {
-
+router.post('/list', passport.authenticate("jwt", { session: false }), async (req, res) => {
     let d = new Date()
     let date = parseInt(d.getTime())
-    let image = "/img/" + req.file.filename;
-    let mimetype = req.file.mimetype;
+    let image = "/img/" + req.file.filename
+    let mimetype = req.file.mimetype
+    let user = req.user.id
     const dblist = new Storage({
         ...req.body,
+        user,
         image,
         mimetype,
         date
     })
-
     try {
         let list = await dblist.save()
         res.json({
@@ -85,48 +82,62 @@ router.post('/list', async (req, res) => {
 })
 
 
-router.post('/list/:_id', async (req, res) => {
+router.post('/list/:_id', passport.authenticate("jwt", { session: false }), async (req, res) => {
     let listExist = await Storage.findOne({ _id: req.params._id })
-
     if (!listExist) {
-        throw new Error("list not found")
-    }
-
-    let d = new Date()
-    let date = parseInt(d.getTime())
-    let image = "/img/" + req.file.filename;
-    let mimetype = req.file.mimetype;
-    const dblist = {
-        ...req.body,
-        image,
-        mimetype,
-        date
-    }
-
-    try {
-        let list = await Storage.findOneAndUpdate({ _id: req.params._id }, dblist, {
-            upsert: true,
-            new: true
-        })
-        res.json({
-            data: list,
-            msg: "updated list successfully",
-            err: "",
-            status: 200
-        })
-    } catch (err) {
         let list = {}
         res.json({
             data: list,
             msg: "",
-            err: err,
+            err: "No Data Found!",
             status: 500
         })
+    } else {
+        if (`${listExist.user}` === `${req.user.id}`) {
+            let d = new Date()
+            let date = parseInt(d.getTime())
+            let image = "/img/" + req.file.filename;
+            let mimetype = req.file.mimetype;
+            const dblist = {
+                ...req.body,
+                image,
+                mimetype,
+                date
+            }
+            try {
+                let list = await Storage.findOneAndUpdate({ _id: req.params._id }, dblist, {
+                    upsert: true,
+                    new: true
+                })
+                res.json({
+                    data: list,
+                    msg: "updated list successfully",
+                    err: "",
+                    status: 200
+                })
+            } catch (err) {
+                let list = {}
+                res.json({
+                    data: list,
+                    msg: "",
+                    err: err,
+                    status: 500
+                })
+            }
+        } else {
+            let list = {}
+            res.json({
+                data: list,
+                msg: "",
+                err: "Unauthorized",
+                status: 500
+            })
+        }
     }
 })
 
 
-router.delete('/del/:_id', async (req, res) => {
+router.delete('/remove/:_id', passport.authenticate('jwt', { session: false }), async (req, res) => {
     try {
         let list = await Storage.deleteOne({ _id: req.params._id })
         res.json({
