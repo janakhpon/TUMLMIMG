@@ -1,6 +1,5 @@
 import express from 'express'
 import path from 'path'
-import fs from 'fs'
 import bodyParser from 'body-parser'
 import mongoose from 'mongoose'
 import multer from 'multer'
@@ -13,10 +12,7 @@ import Storage from './routes/Storage'
 const db = require('./config')
 mongoose.connect(db.MONGO_URI, { useNewUrlParser: true, useUnifiedTopology: true, useFindAndModify: false })
 
-
-
 const app = express()
-
 
 app.use(express.static("public"))
 app.set('views', path.join(__dirname, "views"))
