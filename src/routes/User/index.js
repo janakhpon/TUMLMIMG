@@ -158,7 +158,6 @@ router.post('/updateuser', passport.authenticate('jwt', { session: false }), asy
     if (!userExist) {
         throw new Error("User not found")
     }
-
     let password = await hashPassword(req.body.password)
 
     const dbuser = {

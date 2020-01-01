@@ -48,6 +48,26 @@ router.get('/lists', passport.authenticate('jwt', { session: false }), async (re
     }
 })
 
+router.get('/privatelists', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    let lists = await Storage.find({ user: req.user.id })
+    if (lists) {
+        res.json({
+            data: lists,
+            msg: "fetching success",
+            err: "",
+            status: 200
+        })
+    } else {
+        let lists = {}
+        res.json({
+            data: lists,
+            msg: "",
+            err: "failed to fetch",
+            status: 204
+        })
+    }
+})
+
 router.get('/list/:_id', async (req, res) => {
     let list = await Storage.find({ _id: req.params._id })
     if (list) {
