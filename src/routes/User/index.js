@@ -117,7 +117,7 @@ router.post('/usersignin', async (req, res) => {
         return res.json({
             data: user,
             msg: "",
-            err: err,
+            err: "no user found!",
             status: 500
         })
     } else {
@@ -144,7 +144,7 @@ router.post('/usersignin', async (req, res) => {
             return res.json({
                 data: user,
                 msg: "",
-                err: err,
+                err: "Incorrect Password!",
                 status: 500
             })
         }
