@@ -30,6 +30,35 @@ router.post('/reset', async (req, res) => {
     }
 })
 
+router.get('/me', passport.authenticate('jwt', { session: false }), async (req, res) => {
+    if (req.user.id) {
+        let user = {
+            id: req.user.id,
+            username: req.user.username,
+            phone: req.user.phone,
+            email: req.user.email,
+            position: req.user.position
+        }
+        res.json({
+            data: user,
+            msg: "fetching success",
+            err: "",
+            status: 200
+        })
+    } else {
+        let user = {
+            id: ""
+        }
+        res.json({
+            data: user,
+            msg: "",
+            err: "failed to fetch",
+            status: 204
+        })
+    }
+})
+
+
 router.get('/users', passport.authenticate('jwt', { session: false }), async (req, res) => {
     let users = await User.find()
     if (users) {
