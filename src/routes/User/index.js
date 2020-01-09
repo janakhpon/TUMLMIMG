@@ -15,7 +15,7 @@ router.post('/reset', async (req, res) => {
         let storage = await Storage.deleteMany({})
         res.json({
             data: { user, storage },
-            msg: "resetted successfully",
+            msg: "resetted user successfully",
             err: "",
             status: 200
         })
