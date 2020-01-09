@@ -117,6 +117,9 @@ router.post('/list', passport.authenticate("jwt", { session: false }), async (re
             status: 500
         })
     }
+
+    console.log(req.file.filename)
+    console.log(req.user.id)
 })
 
 router.post('/list/:_id', passport.authenticate("jwt", { session: false }), async (req, res) => {
