@@ -12,7 +12,7 @@ router.post('/reset', async (req, res) => {
         rimraf('./src/public/img/*', () => {
             res.json({
                 data: storage,
-                msg: "resetted successfully",
+                msg: "resetted files successfully",
                 err: "",
                 status: 200
             })
